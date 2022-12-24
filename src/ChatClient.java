@@ -11,6 +11,7 @@ public class ChatClient {
     private final int port;
     private final String hostAddress;
     private Socket socket = null;
+//    username character patterns
     private static final String USERNAME_PATTERN =
             "^[a-zA-Z0-9]([._-](?![._-])|[a-zA-Z0-9]){3,18}[a-zA-Z0-9]$";
 
@@ -18,6 +19,7 @@ public class ChatClient {
 
     private BufferedReader input;
 
+    // create 2 constructors with different parameters (one with default pot and address, other with user inputs)
     public ChatClient() {
         port = 3000;
         hostAddress = "localhost";
@@ -53,6 +55,8 @@ public class ChatClient {
             PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
             Scanner in = new Scanner(System.in);
 
+            // ask for username until you get one correct
+
             System.out.println("Enter your nickname: ");
             String username;
             do {
@@ -62,22 +66,24 @@ public class ChatClient {
 
             String currentTime = LocalTime.now().toString();
 
+            // get welcome message and encrypt username, so that you can split it afterwards in ClientLogic
             String welcomeMessage = currentTime + ": Connection accepted " + hostAddress + "/127.0.0.1:" + port;
 
             username = currentTime + "$" + welcomeMessage + "$" + username;
+            // send username to validate
             out.println(username);
 
-
+            // create thread
             Thread reader = new Thread() {
                 @Override
                 public void run() {
-                    int checker = 0;
+                    int checker = 0;  // checker for program closure
 
                     try {
                         input = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-                        String message = input.readLine();
+                        String message = input.readLine(); // take input
                         while (message != null) {
-                            if (message.equals("port=" + socket.getPort()) || message.equals("localport=" + socket.getLocalPort())) {
+                            if (message.equals("port=" + socket.getPort()) || message.equals("localport=" + socket.getLocalPort())) {  // check for closure
                                 checker++;
 
                                 if (checker == 2) {
@@ -88,7 +94,7 @@ public class ChatClient {
                             }
 
 
-                            message = input.readLine();
+                            message = input.readLine(); //read until you can
                         }
                     } catch (SocketException I) {
                         interrupt();
@@ -102,7 +108,7 @@ public class ChatClient {
             reader.start();
 
             while (true) {
-                if (reader.isInterrupted()) return;
+                if (reader.isInterrupted()) return; // if thread was interrupted finish the program
                 String message = in.nextLine();
                 out.println(message);
             }
@@ -113,12 +119,15 @@ public class ChatClient {
 
     }
 
+
+// validate username characters using regEx
     public static boolean validateUsername(final String username) {
         Matcher matcher = pattern.matcher(username);
         return matcher.matches();
     }
 
     public static void main(String[] args) {
+//        create client instance, and start the program
         ChatClient client;
         if (args.length == 0)
             client = new ChatClient();

@@ -3,7 +3,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 
-public class ClientLogic implements Runnable {
+public class ClientLogic extends Thread {
 
     private final Socket socket;
     private String username;
@@ -14,13 +14,13 @@ public class ClientLogic implements Runnable {
         this.socket = client;
     }
 
-    @Override
+    @Override  // runnable class for client thrads
     public void run() {
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
 
-            String firstInput = reader.readLine().trim();
+            String firstInput = reader.readLine().trim();  // read through first input and split it into, username startDate, printwriter and socket
 
             int divisorIndex = firstInput.indexOf("$");
             int welcomeIndex = firstInput.indexOf("$", divisorIndex + 1);
@@ -45,7 +45,7 @@ public class ClientLogic implements Runnable {
             while (message != null) {
                 int spaceIndex = message.indexOf(" ");
 
-                if (message.charAt(0) == '@' && spaceIndex != -1)
+                if (message.charAt(0) == '@' && spaceIndex != -1) // detect if user wants to DM with someone
                     DM = message.substring(1, spaceIndex);
 
                 if (DM != null) {
@@ -53,7 +53,7 @@ public class ClientLogic implements Runnable {
                     DM = null;
                 } else {
                     String factAboutPenguins = "The black and white 'tuxedo' look donned by most penguin species is a clever camouflage called countershading.";
-                    switch (message) {
+                    switch (message) { // check for special commands and work towards it
                         case "WHOIS" -> chatServer.sendInfo(username);
                         case "PINGU" -> chatServer.sendMessageToAll(factAboutPenguins);
                         case "LOGOUT" -> {
@@ -78,4 +78,5 @@ public class ClientLogic implements Runnable {
             chatServer.disconnect(username);
         }
     }
+
 }
